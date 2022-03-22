@@ -9,12 +9,13 @@ import grpc
 
 from jina.proto import jina_pb2_grpc
 from jina.serve.runtimes.asyncio import AsyncNewLoopRuntime
+from jina.serve.runtimes.mixin import MonitoringMixin
 from jina.serve.runtimes.request_handlers.data_request_handler import DataRequestHandler
 from jina.types.request.control import ControlRequest
 from jina.types.request.data import DataRequest
 
 
-class WorkerRuntime(AsyncNewLoopRuntime, ABC):
+class WorkerRuntime(AsyncNewLoopRuntime, MonitoringMixin, ABC):
     """Runtime procedure leveraging :class:`Grpclet` for sending DataRequests"""
 
     def __init__(
@@ -36,6 +37,13 @@ class WorkerRuntime(AsyncNewLoopRuntime, ABC):
         self._data_request_handler = DataRequestHandler(args, self.logger)
 
     async def async_setup(self):
+        """
+        Wait for the GRPC and Monitoring (if needed) servers to start
+        """
+        await self._async_setup_grpc_server()
+        self._setup_monitoring_server()
+
+    async def _async_setup_grpc_server(self):
         """
         Wait for the GRPC server to start
         """
