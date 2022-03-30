@@ -35,7 +35,9 @@ class WorkerRuntime(AsyncNewLoopRuntime, MonitoringMixin, ABC):
         super().__init__(args, cancel_event, **kwargs)
 
         # Keep this initialization order, otherwise readiness check is not valid
-        self._data_request_handler = DataRequestHandler(args, self.logger)
+        self._data_request_handler = DataRequestHandler(
+            args, self.logger, self.metrics_registry
+        )
 
     async def async_setup(self):
         """
